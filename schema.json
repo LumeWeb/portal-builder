@@ -1,0 +1,55 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://lumeweb.com/schemas/portal-plugins.json",
+  "title": "Portal Plugins Manifest",
+  "description": "Schema for LumeWeb Portal plugin configuration manifest",
+  "type": "object",
+  "required": ["plugins"],
+  "additionalProperties": false,
+  "properties": {
+    "portalVersion": {
+      "type": "string",
+      "description": "Portal core version to build (semantic version, 'latest', or branch name like 'develop')",
+      "pattern": "^(latest|develop|v?[0-9]+\\.[0-9]+\\.[0-9]+(-[a-zA-Z0-9.]+)?)$",
+      "examples": [
+        "latest",
+        "develop",
+        "v1.0.0",
+        "1.2.3",
+        "v2.0.0-beta.1"
+      ]
+    },
+    "plugins": {
+      "type": "array",
+      "description": "List of plugins to include in the portal build",
+      "items": {
+        "type": "object",
+        "required": ["module", "version"],
+        "additionalProperties": false,
+        "properties": {
+          "module": {
+            "type": "string",
+            "description": "Go module path for the plugin",
+            "pattern": "^[a-zA-Z0-9._/-]+$",
+            "examples": [
+              "go.lumeweb.com/portal-plugin-dashboard",
+              "github.com/example/portal-plugin"
+            ]
+          },
+          "version": {
+            "type": "string",
+            "description": "Plugin version (semantic version, 'latest', or 'develop')",
+            "pattern": "^(latest|develop|v?[0-9]+\\.[0-9]+\\.[0-9]+(-[a-zA-Z0-9.]+)?)$",
+            "examples": [
+              "latest",
+              "develop",
+              "v1.0.0",
+              "1.2.3",
+              "v2.0.0-beta.1"
+            ]
+          }
+        }
+      }
+    }
+  }
+}
