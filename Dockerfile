@@ -2,11 +2,11 @@
 # Build environment for compiling LumeWeb Portal with custom plugins via docker buildx
 # Use as a base image in your Dockerfile: FROM ghcr.io/lumeweb/portal-builder:latest
 
+FROM golang:1.25-alpine
+
 # Build arguments for yq version and checksum - override with --build-arg
 ARG YQ_VERSION=v4.52.2
 ARG YQ_SHA256=a74bd266990339e0c48a2103534aef692abf99f19390d12c2b0ce6830385c459
-
-FROM golang:1.25-alpine
 
 # Install build dependencies
 RUN apk add --no-cache \
