@@ -2,6 +2,10 @@
 # Build environment for compiling LumeWeb Portal with custom plugins via docker buildx
 # Use as a base image in your Dockerfile: FROM ghcr.io/lumeweb/portal-builder:latest
 
+# Build arguments for yq version and checksum - override with --build-arg
+ARG YQ_VERSION=v4.52.2
+ARG YQ_SHA256=a74bd266990339e0c48a2103534aef692abf99f19390d12c2b0ce6830385c459
+
 FROM golang:1.25-alpine
 
 # Install build dependencies
@@ -16,7 +20,9 @@ RUN apk add --no-cache \
     python3
 
 # Install yq (YAML parser)
-RUN wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 && \
+# Version pinned for reproducible builds; checksum verified for security
+RUN wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64 && \
+    echo "${YQ_SHA256}  /usr/local/bin/yq" | sha256sum -c - && \
     chmod +x /usr/local/bin/yq
 
 # Install xportal

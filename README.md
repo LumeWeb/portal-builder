@@ -5,7 +5,7 @@ Base image for compiling LumeWeb Portal with custom plugins via xportal. Designe
 ## Features
 
 - **Base image pattern**: Extend in your own Dockerfile for custom builds
-- **Pre-configured build environment**: Based on `golang:1.21-alpine`
+- **Pre-configured build environment**: Based on `golang:1.25-alpine`
 - **xportal binary**: Pre-installed for building Portal
 - **yq YAML parser**: For parsing plugin manifests
 - **JSON schema validation**: Built-in validation for plugin manifests

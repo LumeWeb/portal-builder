@@ -94,7 +94,7 @@ parse_env_plugins() {
 build_portal() {
     # Check if portal version is specified in YAML (ENV takes precedence)
     yaml_portal_version=$(parse_portal_version)
-    if [ -n "$yaml_portal_version" ] && [ -z "$(echo "$PORTAL_VERSION" | grep -v '^latest$')" ]; then
+    if [ -n "$yaml_portal_version" ] && [ "$PORTAL_VERSION" = "latest" ]; then
         PORTAL_VERSION="$yaml_portal_version"
     fi
     
