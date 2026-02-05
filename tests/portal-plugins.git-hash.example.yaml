@@ -1,0 +1,8 @@
+# Example Portal Plugins Manifest with Git Hashes
+
+portalVersion: 84c073f
+plugins:
+  - module: go.lumeweb.com/portal-plugin-core
+    version: 84c073f
+  - module: go.lumeweb.com/portal-plugin-dashboard
+    version: bfc88b3c061bd7c29c03fd8bdba7a93af1e5dd1e

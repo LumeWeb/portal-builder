@@ -76,7 +76,7 @@ Create a `portal-plugins.yaml`:
 plugins:
   - module: go.lumeweb.com/portal-plugin-dashboard
     version: latest
-  - module: go.lumeweb.com/portal-plugin-auth
+  - module: go.lumeweb.com/portal-plugin-core
     version: v2.0.0
 ```
 
@@ -129,6 +129,30 @@ Build:
 docker build --build-arg PORTAL_VERSION=develop -t my-portal .
 ```
 
+### Build with Git Hash
+
+```dockerfile
+FROM ghcr.io/lumeweb/portal-builder:latest AS builder
+ARG PORTAL_VERSION=a1b2c3d
+ENV PORTAL_VERSION=${PORTAL_VERSION}
+COPY portal-plugins.yaml .
+RUN build-portal
+
+FROM alpine:latest
+COPY --from=builder /dist/portal /usr/local/bin/portal
+CMD ["portal"]
+```
+
+Build:
+```bash
+docker build --build-arg PORTAL_VERSION=a1b2c3d -t my-portal .
+```
+
+Or use full hash:
+```bash
+docker build --build-arg PORTAL_VERSION=a1b2c3d4e5f6789012345678901234567890abcd -t my-portal .
+```
+
 ### Build with Plugins from ENV
 
 ```dockerfile
@@ -154,12 +178,23 @@ docker build --build-arg PLUGINS="go.lumeweb.com/portal-plugin-core@develop" -t 
 Create `portal-plugins.yaml`:
 
 ```yaml
-portalVersion: develop  # Optional: Portal core version
+portalVersion: develop  # Optional: Portal core version (supports semantic version, latest, develop, or git hash)
 plugins:
   - module: go.lumeweb.com/portal-plugin-dashboard
     version: latest
   - module: go.lumeweb.com/portal-plugin-auth
     version: v2.0.0
+```
+
+Or with git hashes:
+
+```yaml
+portalVersion: a1b2c3d
+plugins:
+  - module: go.lumeweb.com/portal-plugin-dashboard
+    version: a1b2c3d
+  - module: go.lumeweb.com/portal-plugin-core
+    version: a1b2c3d4e5f6789012345678901234567890abcd
 ```
 
 ### Method 2: Environment Variables
@@ -190,10 +225,10 @@ Both sources can be used together - plugins from both will be combined.
 ### portal-plugins.yaml
 
 ```yaml
-portalVersion: develop  # Optional: Portal core version
+portalVersion: develop  # Optional: Portal core version (supports semantic version, latest, develop, or git hash)
 plugins:
   - module: go.lumeweb.com/portal-plugin-example  # Go module path (required)
-    version: latest                                 # Version or "latest" (required)
+    version: latest                                 # Version (supports semantic version, latest, develop, or git hash)
 ```
 
 ### JSON Schema
@@ -201,8 +236,8 @@ plugins:
 The manifest is validated against the built-in schema. The schema enforces:
 
 - `module`: Go module path (alphanumeric, dots, slashes, hyphens, underscores)
-- `version`: Semantic version or `latest` (e.g., `v1.0.0`, `1.2.3`, `latest`, `v2.0.0-beta.1`)
-- `portalVersion`: Portal core version (optional, supports `latest`, `develop`, or semantic versions)
+- `version`: Semantic version, `latest`, `develop`, or git hash (e.g., `v1.0.0`, `1.2.3`, `latest`, `v2.0.0-beta.1`, `a1b2c3d`, `a1b2c3d4e5f6789012345678901234567890abcd`)
+- `portalVersion`: Portal core version (optional, supports `latest`, `develop`, semantic versions, or git hashes)
 
 ### Custom Schema
 
@@ -266,7 +301,8 @@ CMD ["portal"]
 
 ## Notes
 
-- Plugin versions support semantic versioning (e.g., `v1.2.3`) or `latest`
+- Plugin versions support semantic versioning (e.g., `v1.2.3`), `latest`, `develop`, or git hashes
+- Git hashes can be short (7 characters minimum, e.g., `a1b2c3d`) or full (40 characters, e.g., `a1b2c3d4e5f6789012345678901234567890abcd`)
 - The `@latest` version can be omitted (e.g., `go.lumeweb.com/plugin@latest` = `go.lumeweb.com/plugin`)
 - All plugins are built into a single Portal binary
 - The build process requires internet access to download Go modules
