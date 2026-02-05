@@ -22,7 +22,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.11'
 
       - name: Install check-jsonschema
         run: pip install check-jsonschema
@@ -34,7 +34,7 @@ jobs:
           ./schema-validation-tests.sh
 
       - name: Validate JSON Schema syntax
-        run: check-jsonschema --builtin-schema meta-schema schema.json
+        run: check-jsonschema --check-metaschema schema.json
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@2.0.0

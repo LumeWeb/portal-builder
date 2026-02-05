@@ -45,7 +45,7 @@ FROM ghcr.io/lumeweb/portal-builder:latest AS builder
 # Cache specific plugin dependencies
 WORKDIR /tmp/plugin-cache
 RUN go mod init plugin-cache && \
-    go get go.lumeweb.com/portal-plugin-dashboard@v2.0.0 && \
+    go get go.lumeweb.com/portal-plugin-dashboard@latest && \
     go mod download && \
     rm -rf /tmp/plugin-cache
 
@@ -77,7 +77,7 @@ plugins:
   - module: go.lumeweb.com/portal-plugin-dashboard
     version: latest
   - module: go.lumeweb.com/portal-plugin-core
-    version: v2.0.0
+    version: latest
 ```
 
 Build your image:
@@ -182,8 +182,8 @@ portalVersion: develop  # Optional: Portal core version (supports semantic versi
 plugins:
   - module: go.lumeweb.com/portal-plugin-dashboard
     version: latest
-  - module: go.lumeweb.com/portal-plugin-auth
-    version: v2.0.0
+  - module: go.lumeweb.com/portal-plugin-core
+    version: latest
 ```
 
 Or with git hashes:
@@ -202,7 +202,7 @@ plugins:
 ```dockerfile
 FROM ghcr.io/lumeweb/portal-builder:latest AS builder
 ENV PORTAL_VERSION=develop
-ENV PLUGINS="go.lumeweb.com/portal-plugin-dashboard@latest,go.lumeweb.com/portal-plugin-auth@v2.0.0"
+ENV PLUGINS="go.lumeweb.com/portal-plugin-dashboard@latest,go.lumeweb.com/portal-plugin-core@latest"
 RUN build-portal
 ```
 
@@ -289,7 +289,7 @@ CMD ["portal"]
 
 ```dockerfile
 FROM ghcr.io/lumeweb/portal-builder:latest AS builder
-ARG PORTAL_VERSION=v2.0.0
+ARG PORTAL_VERSION=latest
 ENV PORTAL_VERSION=${PORTAL_VERSION}
 COPY portal-plugins.yaml .
 RUN build-portal
@@ -302,12 +302,52 @@ CMD ["portal"]
 ## Notes
 
 - Plugin versions support semantic versioning (e.g., `v1.2.3`), `latest`, `develop`, or git hashes
-- Git hashes can be short (7 characters minimum, e.g., `a1b2c3d`) or full (40 characters, e.g., `a1b2c3d4e5f6789012345678901234567890abcd`)
 - The `@latest` version can be omitted (e.g., `go.lumeweb.com/plugin@latest` = `go.lumeweb.com/plugin`)
 - All plugins are built into a single Portal binary
 - The build process requires internet access to download Go modules
 - The image includes a non-root user setup following security best practices
 - Go module cache is pre-populated, but custom plugins may still need downloads
+
+## Git Hash Versioning
+
+When using git hashes for `portalVersion` or plugin versions, the following validation rules apply:
+
+### Format Requirements
+
+- **Minimum length**: 7 characters
+- **Maximum length**: 40 characters
+- **Character set**: Only lowercase hexadecimal characters (`0-9`, `a-f`)
+- **Case sensitivity**: Must be lowercase (uppercase hashes will be rejected)
+
+### Valid Examples
+
+```yaml
+# Short hash (7 characters)
+portalVersion: 84c073f
+
+# Medium hash (8 characters)
+version: bfc88b3c
+
+# Full hash (40 characters)
+version: 84c073f181430439ca4dd539064480748cd654a0
+```
+
+### Invalid Examples
+
+The following formats will be rejected by schema validation:
+
+- Too short: `84c073` (6 characters)
+- Too long: `84c073f181430439ca4dd539064480748cd654a01` (41 characters)
+- Uppercase: `84C073F` (must be lowercase)
+- Invalid characters: `g1b2c3d` (contains 'g' which is not a valid hex character)
+- Mixed case: `A1b2C3d` (must be all lowercase)
+
+### Best Practices
+
+- Use exact git commit hashes from your repository
+- Short hashes (7-8 characters) are sufficient for most use cases
+- Full hashes (40 characters) provide complete uniqueness
+- Always verify hashes are lowercase before using them in manifests
 
 ## Publishing the Image
 
