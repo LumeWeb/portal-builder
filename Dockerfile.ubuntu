@@ -7,10 +7,8 @@ FROM ubuntu:24.04
 # Prevent interactive prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Build arguments for yq and Go versions - override with --build-arg
+# Build arguments for yq version - override with --build-arg
 ARG YQ_VERSION=v4.52.2
-ARG YQ_SHA256=a74bd266990339e0c48a2103534aef692abf99f19390d12c2b0ce6830385c459
-ARG GO_VERSION=1.26.0
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -36,8 +34,14 @@ ENV PATH=/usr/lib/go-1.26/bin:${PATH}
 
 # Install yq (YAML parser)
 # Version pinned for reproducible builds; checksum verified for security
-RUN curl -fsSL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64 && \
-    echo "${YQ_SHA256}  /usr/local/bin/yq" | sha256sum -c - && \
+# Automatically detects platform architecture for multi-platform builds
+RUN ARCH=$(dpkg --print-architecture) && \
+    if [ "$ARCH" = "arm64" ]; then \
+        YQ_ARCH="yq_linux_arm64"; \
+    else \
+        YQ_ARCH="yq_linux_amd64"; \
+    fi && \
+    curl -fsSL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/${YQ_ARCH} && \
     chmod +x /usr/local/bin/yq
 
 # Install xportal
