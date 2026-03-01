@@ -28,6 +28,15 @@ jobs:
     permissions:
       contents: read
       packages: write
+    strategy:
+      matrix:
+        include:
+          - dockerfile: Dockerfile
+            tag_suffix: ""
+            latest_tag: latest
+          - dockerfile: Dockerfile.ubuntu
+            tag_suffix: "-ubuntu"
+            latest_tag: ubuntu
 
     steps:
       - name: Checkout repository
@@ -52,17 +61,18 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=ref,event=branch
-            type=ref,event=pr
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/develop' }}
+            type=ref,event=branch,suffix=${{ matrix.tag_suffix }}
+            type=ref,event=pr,suffix=${{ matrix.tag_suffix }}
+            type=semver,pattern={{version}},suffix=${{ matrix.tag_suffix }}
+            type=semver,pattern={{major}}.{{minor}},suffix=${{ matrix.tag_suffix }}
+            type=semver,pattern={{major}},suffix=${{ matrix.tag_suffix }}
+            type=raw,value=${{ matrix.latest_tag }},enable=${{ github.ref == 'refs/heads/develop' }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./${{ matrix.dockerfile }}
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
