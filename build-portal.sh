@@ -136,16 +136,13 @@ build_portal() {
         fi
     fi
     
-    # Build with xportal
-    # Build output argument
-    output_args=""
-    if [ "$OUTPUT_DIR" != "." ]; then
-        output_args="--output $OUTPUT_DIR/portal"
-    fi
-
     # Run xportal with common environment variables
     # shellcheck disable=SC2086
-    run_xportal $output_args $plugin_args
+    if [ "$OUTPUT_DIR" != "." ]; then
+        run_xportal --output "$OUTPUT_DIR/portal" $plugin_args
+    else
+        run_xportal $plugin_args
+    fi
     
     echo "Build complete: $OUTPUT_DIR/portal"
 }
