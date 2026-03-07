@@ -90,6 +90,11 @@ parse_env_plugins() {
     done
 }
 
+# Helper function to run xportal with common environment variables
+run_xportal() {
+    PORTAL_VERSION="$PORTAL_VERSION" GOPROXY=direct xportal build "$@"
+}
+
 # Main build function
 build_portal() {
     # Check if portal version is specified in YAML (ENV takes precedence)
@@ -131,22 +136,12 @@ build_portal() {
         fi
     fi
     
-    # Build xportal command with portal version
-    if [ -n "$plugin_args" ]; then
-        echo "Building with plugins..."
-        # shellcheck disable=SC2086
-        if [ "$OUTPUT_DIR" != "." ]; then
-            PORTAL_VERSION="$PORTAL_VERSION" xportal build --output "$OUTPUT_DIR/portal" $plugin_args
-        else
-            PORTAL_VERSION="$PORTAL_VERSION" xportal build $plugin_args
-        fi
+    # Run xportal with common environment variables
+    # shellcheck disable=SC2086
+    if [ "$OUTPUT_DIR" != "." ]; then
+        run_xportal --output "$OUTPUT_DIR/portal" $plugin_args
     else
-        echo "Building without plugins..."
-        if [ "$OUTPUT_DIR" != "." ]; then
-            PORTAL_VERSION="$PORTAL_VERSION" xportal build --output "$OUTPUT_DIR/portal"
-        else
-            PORTAL_VERSION="$PORTAL_VERSION" xportal build
-        fi
+        run_xportal $plugin_args
     fi
     
     echo "Build complete: $OUTPUT_DIR/portal"
