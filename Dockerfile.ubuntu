@@ -45,7 +45,7 @@ RUN ARCH=$(dpkg --print-architecture) && \
     chmod +x /usr/local/bin/yq
 
 # Install xportal
-RUN GOPROXY=direct /usr/lib/go-1.26/bin/go install go.lumeweb.com/xportal/cmd/xportal@latest
+RUN /usr/lib/go-1.26/bin/go install go.lumeweb.com/xportal/xcmd/xportal@latest
 
 # Pre-populate Go module cache for common dependencies
 # This significantly speeds up builds in child images by avoiding re-downloads
@@ -58,7 +58,7 @@ WORKDIR /tmp/cache-warmup
 # Download Portal core dependencies (develop version)
 # This creates go.mod and populates the module cache
 RUN /usr/lib/go-1.26/bin/go mod init cache-warmup && \
-    GOPROXY=direct /usr/lib/go-1.26/bin/go get go.lumeweb.com/portal@develop && \
+    /usr/lib/go-1.26/bin/go get go.lumeweb.com/portal@develop && \
     /usr/lib/go-1.26/bin/go mod download go.lumeweb.com/portal@develop && \
     # Clean up temporary files
     rm -rf /tmp/cache-warmup

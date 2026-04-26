@@ -92,7 +92,7 @@ parse_env_plugins() {
 
 # Helper function to run xportal with common environment variables
 run_xportal() {
-    PORTAL_VERSION="$PORTAL_VERSION" GOPROXY=direct xportal build "$@"
+    PORTAL_VERSION="$PORTAL_VERSION" xportal build "$@"
 }
 
 # Main build function
