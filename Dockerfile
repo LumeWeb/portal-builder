@@ -4,6 +4,9 @@
 
 FROM golang:1.26-alpine
 
+# Set GOPROXY to use internal proxy first, with direct fallback
+ENV GOPROXY=https://proxy.go.lumeweb.com,direct
+
 # Build arguments for yq version and checksum - override with --build-arg
 ARG YQ_VERSION=v4.52.2
 ARG YQ_SHA256=a74bd266990339e0c48a2103534aef692abf99f19390d12c2b0ce6830385c459
@@ -28,7 +31,7 @@ RUN apk add --no-cache curl && \
     rm -rf /var/cache/apk/*
 
 # Install xportal
-RUN GOPROXY=direct go install go.lumeweb.com/xportal/cmd/xportal@latest
+RUN go install go.lumeweb.com/xportal/cmd/xportal@latest
 
 # Pre-populate Go module cache for common dependencies
 # This significantly speeds up builds in child images by avoiding re-downloads
@@ -41,7 +44,7 @@ WORKDIR /tmp/cache-warmup
 # Download Portal core dependencies (develop version)
 # This creates go.mod and populates the module cache
 RUN go mod init cache-warmup && \
-    GOPROXY=direct go get go.lumeweb.com/portal@develop && \
+    go get go.lumeweb.com/portal@develop && \
     go mod download go.lumeweb.com/portal@develop && \
     # Clean up temporary files
     rm -rf /tmp/cache-warmup
