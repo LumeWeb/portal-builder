@@ -54,6 +54,34 @@
           }
         }
       }
+    },
+    "replacements": {
+      "type": "array",
+      "description": "Go module replacements (equivalent to go.mod replace directives). Used when a plugin requires a forked or patched dependency.",
+      "items": {
+        "type": "object",
+        "required": ["old", "new"],
+        "additionalProperties": false,
+        "properties": {
+          "old": {
+            "type": "string",
+            "description": "The Go module path being replaced (with optional @version)",
+            "examples": [
+              "github.com/original/module",
+              "github.com/original/module@v1.0.0"
+            ]
+          },
+          "new": {
+            "type": "string",
+            "description": "The replacement Go module path (with optional @version)",
+            "examples": [
+              "github.com/fork/module",
+              "github.com/fork/module@v1.0.1",
+              "/local/path/to/module"
+            ]
+          }
+        }
+      }
     }
   }
 }

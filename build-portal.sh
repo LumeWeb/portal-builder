@@ -71,6 +71,21 @@ parse_yaml_plugins() {
     yq eval '.plugins[] | "--with " + .module + "@" + .version' "$PLUGIN_MANIFEST" 2>/dev/null || true
 }
 
+# Function to parse replacements from YAML
+parse_yaml_replacements() {
+    if [ ! -f "$PLUGIN_MANIFEST" ]; then
+        return
+    fi
+
+    # Use yq to extract replacements
+    if ! command -v yq >/dev/null 2>&1; then
+        return
+    fi
+
+    # Parse replacements array and format as --replace old=new
+    yq eval '.replacements[] | "--replace " + .old + "=" + .new' "$PLUGIN_MANIFEST" 2>/dev/null || true
+}
+
 # Function to parse plugins from ENV var (space or comma separated)
 parse_env_plugins() {
     if [ -z "$PLUGINS" ]; then
@@ -87,6 +102,20 @@ parse_env_plugins() {
         else
             echo "--with ${plugin}@latest"
         fi
+    done
+}
+
+# Function to parse replacements from ENV var (comma separated, format: old=new)
+parse_env_replacements() {
+    if [ -z "$REPLACEMENTS" ]; then
+        return
+    fi
+
+    # Convert comma-separated to newline-separated
+    replacements=$(echo "$REPLACEMENTS" | tr ',' '\n')
+    
+    for replacement in $replacements; do
+        echo "--replace $replacement"
     done
 }
 
@@ -108,6 +137,8 @@ build_portal() {
     
     # Collect plugin args from both sources
     plugin_args=""
+    # Collect replacement args from both sources
+    replacement_args=""
     
     # Validate YAML manifest if it exists
     if [ -f "$PLUGIN_MANIFEST" ]; then
@@ -118,6 +149,12 @@ build_portal() {
             plugin_args="$yaml_plugins"
             echo "Plugins from YAML:"
             echo "$yaml_plugins" | sed 's/--with /  - /'
+        fi
+        yaml_replacements=$(parse_yaml_replacements)
+        if [ -n "$yaml_replacements" ]; then
+            replacement_args="$yaml_replacements"
+            echo "Replacements from YAML:"
+            echo "$yaml_replacements" | sed 's/--replace /  - /'
         fi
     fi
     
@@ -135,13 +172,28 @@ build_portal() {
             echo "$env_plugins" | sed 's/--with /  - /'
         fi
     fi
+
+    # Parse REPLACEMENTS env var if set
+    if [ -n "$REPLACEMENTS" ]; then
+        echo "Loading replacements from REPLACEMENTS env var"
+        env_replacements=$(parse_env_replacements)
+        if [ -n "$env_replacements" ]; then
+            if [ -n "$replacement_args" ]; then
+                replacement_args="$replacement_args $env_replacements"
+            else
+                replacement_args="$env_replacements"
+            fi
+            echo "Replacements from ENV:"
+            echo "$env_replacements" | sed 's/--replace /  - /'
+        fi
+    fi
     
     # Run xportal with common environment variables
     # shellcheck disable=SC2086
     if [ "$OUTPUT_DIR" != "." ]; then
-        run_xportal --output "$OUTPUT_DIR/portal" $plugin_args
+        run_xportal --output "$OUTPUT_DIR/portal" $plugin_args $replacement_args
     else
-        run_xportal $plugin_args
+        run_xportal $plugin_args $replacement_args
     fi
     
     echo "Build complete: $OUTPUT_DIR/portal"
