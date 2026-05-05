@@ -171,6 +171,33 @@ Build:
 docker build --build-arg PLUGINS="go.lumeweb.com/portal-plugin-core@develop" -t my-portal .
 ```
 
+### Build with Go Module Replacements
+
+When a plugin requires a forked or patched dependency, use `replacements` in the YAML manifest:
+
+```yaml
+portalVersion: develop
+plugins:
+  - module: go.lumeweb.com/portal-plugin-dashboard
+    version: latest
+replacements:
+  - old: github.com/original/module@v1.0.0
+    new: github.com/fork/module@v1.0.1
+```
+
+Or via the `REPLACEMENTS` environment variable:
+
+```dockerfile
+FROM ghcr.io/lumeweb/portal-builder:latest AS builder
+ENV REPLACEMENTS="github.com/original/module@v1.0.0=github.com/fork/module@v1.0.1"
+COPY portal-plugins.yaml .
+RUN build-portal
+
+FROM alpine:latest
+COPY --from=builder /dist/portal /usr/local/bin/portal
+CMD ["portal"]
+```
+
 ## Configuration
 
 ### Method 1: YAML Manifest (Recommended)
@@ -197,6 +224,22 @@ plugins:
     version: a1b2c3d4e5f6789012345678901234567890abcd
 ```
 
+### Go Module Replacements
+
+When a plugin requires a forked or patched Go dependency, add `replacements` to the manifest:
+
+```yaml
+portalVersion: develop
+plugins:
+  - module: go.lumeweb.com/portal-plugin-dashboard
+    version: latest
+replacements:
+  - old: github.com/original/module@v1.0.0
+    new: github.com/fork/module@v1.0.1
+```
+
+Each replacement maps directly to a `go.mod` replace directive. The `old` field is the module being replaced (with optional `@version`), and the `new` field is the replacement module path.
+
 ### Method 2: Environment Variables
 
 ```dockerfile
@@ -216,6 +259,7 @@ Both sources can be used together - plugins from both will be combined.
 |----------|-------------|---------|
 | `PORTAL_VERSION` | Portal core version to build | `latest` |
 | `PLUGINS` | Comma or space-separated plugin list (format: `module@version`) | - |
+| `REPLACEMENTS` | Comma-separated Go module replacements (format: `old=new`) | - |
 | `PLUGIN_MANIFEST` | Path to YAML plugin manifest | `portal-plugins.yaml` |
 | `OUTPUT_DIR` | Output directory for compiled binary | `/dist` |
 | `SCHEMA_PATH` | Path to JSON schema for validation | `/usr/local/share/portal-builder/schema.json` |
@@ -238,6 +282,7 @@ The manifest is validated against the built-in schema. The schema enforces:
 - `module`: Go module path (alphanumeric, dots, slashes, hyphens, underscores)
 - `version`: Semantic version, `latest`, `develop`, or git hash (e.g., `v1.0.0`, `1.2.3`, `latest`, `v2.0.0-beta.1`, `a1b2c3d`, `a1b2c3d4e5f6789012345678901234567890abcd`)
 - `portalVersion`: Portal core version (optional, supports `latest`, `develop`, semantic versions, or git hashes)
+- `replacements`: Go module replacements (optional, each with `old` and `new` fields for `go.mod` replace directives)
 
 ### Custom Schema
 
