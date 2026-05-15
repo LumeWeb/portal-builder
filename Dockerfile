@@ -17,7 +17,8 @@ RUN apk add --no-cache \
     libwebp-dev \
     ca-certificates \
     tzdata \
-    python3
+    python3 \
+    jq
 
 # Install yq (YAML parser)
 # Version pinned for reproducible builds; checksum verified for security

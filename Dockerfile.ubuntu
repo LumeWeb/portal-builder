@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip \
     curl \
     software-properties-common \
+    jq \
     && rm -rf /var/lib/apt/lists/*
 
 # Add Go PPA and install Go
