@@ -18,15 +18,15 @@ RUN apk add --no-cache \
     ca-certificates \
     tzdata \
     python3 \
-    jq
+    jq \
+    curl \
+    wget
 
 # Install yq (YAML parser)
 # Version pinned for reproducible builds; checksum verified for security
-RUN apk add --no-cache curl && \
-    curl -fsSL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64 && \
+RUN curl -fsSL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64 && \
     echo "${YQ_SHA256}  /usr/local/bin/yq" | sha256sum -c - && \
-    chmod +x /usr/local/bin/yq && \
-    rm -rf /var/cache/apk/*
+    chmod +x /usr/local/bin/yq
 
 # Install xportal
 RUN go install go.lumeweb.com/xportal/xcmd/xportal@latest
