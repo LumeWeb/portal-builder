@@ -55,6 +55,13 @@
         }
       }
     },
+    "setup": {
+      "type": "string",
+      "description": "Inline bash script to run inside the build container before generate/build/test. Use for installing extra dependencies (e.g. Kubo, jq, system packages).",
+      "examples": [
+        "apt-get update && apt-get install -y jq\nwget -q https://github.com/ipfs/kubo/releases/download/v0.34.0/kubo_v0.34.0_linux-amd64.tar.gz && tar -xzf kubo_v0.34.0_linux-amd64.tar.gz && cp kubo/ipfs /usr/local/bin && ipfs init"
+      ]
+    },
     "replacements": {
       "type": "array",
       "description": "Go module replacements (equivalent to go.mod replace directives). Used when a plugin requires a forked or patched dependency.",

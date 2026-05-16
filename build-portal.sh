@@ -86,6 +86,24 @@ parse_yaml_replacements() {
     yq eval '.replacements[] | "--replace " + .old + "=" + .new' "$PLUGIN_MANIFEST" 2>/dev/null || true
 }
 
+# Function to run setup script from YAML manifest
+run_setup() {
+    if [ ! -f "$PLUGIN_MANIFEST" ]; then
+        return
+    fi
+
+    if ! command -v yq >/dev/null 2>&1; then
+        return
+    fi
+
+    setup_script=$(yq eval '.setup // ""' "$PLUGIN_MANIFEST" 2>/dev/null)
+    if [ -n "$setup_script" ]; then
+        echo "Running setup from manifest..."
+        echo "$setup_script" | bash
+        echo "Setup complete"
+    fi
+}
+
 # Function to parse plugins from ENV var (space or comma separated)
 parse_env_plugins() {
     if [ -z "$PLUGINS" ]; then
@@ -201,6 +219,9 @@ build_portal() {
 
 # Create output directory
 mkdir -p "$OUTPUT_DIR"
+
+# Run setup from manifest (if present)
+run_setup
 
 # Run build
 build_portal
