@@ -20,7 +20,8 @@ RUN apk add --no-cache \
     python3 \
     jq \
     curl \
-    wget
+    wget \
+    unzip
 
 # Install yq (YAML parser)
 # Version pinned for reproducible builds; checksum verified for security
