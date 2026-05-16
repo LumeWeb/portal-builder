@@ -99,7 +99,7 @@ run_setup() {
     setup_script=$(yq eval '.setup // ""' "$PLUGIN_MANIFEST" 2>/dev/null)
     if [ -n "$setup_script" ]; then
         echo "Running setup from manifest..."
-        echo "$setup_script" | bash
+        echo "$setup_script" | bash || { echo "Error: Setup script failed" >&2; exit 1; }
         echo "Setup complete"
     fi
 }
