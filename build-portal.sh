@@ -223,5 +223,29 @@ mkdir -p "$OUTPUT_DIR"
 # Run setup from manifest (if present)
 run_setup
 
-# Run build
-build_portal
+# Retry only on transient sum.golang.org 500 errors with backoff aligned to propagation delay
+log=$(mktemp)
+trap 'rm -f "$log"' EXIT
+for i in 1 2 3 4 5; do
+    if [ "$i" != "1" ] && [ "$OUTPUT_DIR" != "." ]; then
+        rm -rf "$OUTPUT_DIR/portal"
+    fi
+    if build_portal > "$log" 2>&1; then
+        cat "$log"
+        break
+    fi
+    if grep -qiE 'sum\.golang\.org/.*: 500 Internal Server Error|checksum database.*internal server error' "$log" >/dev/null 2>&1; then
+        if [ "$i" = "5" ]; then
+            cat "$log"
+            echo "All build attempts failed"
+            exit 1
+        fi
+        wait=$((120 * i))
+        echo "Transient sum.golang.org error on attempt $i, retrying in ${wait}s..."
+        sleep "$wait"
+    else
+        cat "$log"
+        echo "Build attempt $i failed with a non-transient error"
+        exit 1
+    fi
+done
