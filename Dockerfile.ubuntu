@@ -31,9 +31,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Add Go PPA and install Go
 RUN add-apt-repository -y ppa:longsleep/golang-backports && \
     apt-get update && \
-    apt-get install -y golang-1.26 && \
+    apt-get install -y golang-1.27 && \
     rm -rf /var/lib/apt/lists/*
-ENV PATH=/usr/lib/go-1.26/bin:${PATH}
+ENV PATH=/usr/lib/go-1.27/bin:${PATH}
 
 # Install yq (YAML parser)
 # Version pinned for reproducible builds; checksum verified for security
@@ -48,7 +48,7 @@ RUN ARCH=$(dpkg --print-architecture) && \
     chmod +x /usr/local/bin/yq
 
 # Install xportal
-RUN /usr/lib/go-1.26/bin/go install go.lumeweb.com/xportal/xcmd/xportal@latest
+RUN /usr/lib/go-1.27/bin/go install go.lumeweb.com/xportal/xcmd/xportal@latest
 
 # Pre-populate Go module cache for common dependencies
 # This significantly speeds up builds in child images by avoiding re-downloads
@@ -60,9 +60,9 @@ WORKDIR /tmp/cache-warmup
 
 # Download Portal core dependencies (develop version)
 # This creates go.mod and populates the module cache
-RUN /usr/lib/go-1.26/bin/go mod init cache-warmup && \
-    /usr/lib/go-1.26/bin/go get go.lumeweb.com/portal@develop && \
-    /usr/lib/go-1.26/bin/go mod download go.lumeweb.com/portal@develop && \
+RUN /usr/lib/go-1.27/bin/go mod init cache-warmup && \
+    /usr/lib/go-1.27/bin/go get go.lumeweb.com/portal@develop && \
+    /usr/lib/go-1.27/bin/go mod download go.lumeweb.com/portal@develop && \
     # Clean up temporary files
     rm -rf /tmp/cache-warmup
 
