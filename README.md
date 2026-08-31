@@ -214,6 +214,22 @@ buildTags:
 
 The tags are forwarded to `go build -tags "foo bar"` via xportal's `XPORTAL_GO_BUILD_FLAGS_EXTRA`. The default `nobadger` tag (plus `-trimpath` and `-w -s` stripping) is always applied on top, so specifying `buildTags` does not disable those defaults.
 
+### Exclude Problematic Module Versions
+
+To prevent a specific Go module version from being selected during dependency resolution, add `excludes` to the manifest. Each entry requires a `module` path and a specific `version` (a versionless exclude is not allowed by `go mod edit -exclude`):
+
+```yaml
+portalVersion: develop
+plugins:
+  - module: go.lumeweb.com/portal-plugin-dashboard
+    version: latest
+excludes:
+  - module: github.com/some/dependency
+    version: v1.2.3
+```
+
+The entries are forwarded to xportal's `--exclude module@version` flag, which adds `exclude` directives to `go.mod`. This is useful for working around dependency resolution conflicts where a bad module version would otherwise be pulled in.
+
 ## Configuration
 
 ### Method 1: YAML Manifest (Recommended)
@@ -299,7 +315,8 @@ The manifest is validated against the built-in schema. The schema enforces:
 - `version`: Semantic version, `latest`, `develop`, or git hash (e.g., `v1.0.0`, `1.2.3`, `latest`, `v2.0.0-beta.1`, `a1b2c3d`, `a1b2c3d4e5f6789012345678901234567890abcd`)
 - `portalVersion`: Portal core version (optional, supports `latest`, `develop`, semantic versions, or git hashes)
 - `replacements`: Go module replacements (optional, each with `old` and `new` fields for `go.mod` replace directives)
-- `buildTags`: Go build tags (optional, array of strings, applied to `go build -tags` alongside the default `nobadger`)`
+- `buildTags`: Go build tags (optional, array of strings, applied to `go build -tags` alongside the default `nobadger`)
+- `excludes`: Go module exclusion directives (optional, each with `module` and `version` fields for `go.mod` exclude directives)
 
 ### Custom Schema
 
