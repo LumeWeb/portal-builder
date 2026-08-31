@@ -21,7 +21,13 @@ RUN apk add --no-cache \
     jq \
     curl \
     wget \
-    unzip
+    unzip \
+    bash \
+    nodejs \
+    npm
+
+# Install pnpm for frontend asset builds
+RUN npm install -g pnpm@10
 
 # Install yq (YAML parser)
 # Version pinned for reproducible builds; checksum verified for security

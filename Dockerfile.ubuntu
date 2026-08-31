@@ -26,7 +26,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     software-properties-common \
     jq \
+    nodejs \
+    npm \
     && rm -rf /var/lib/apt/lists/*
+
+# Install pnpm for frontend asset builds
+RUN npm install -g pnpm@10
 
 # Add Go PPA and install Go
 RUN add-apt-repository -y ppa:longsleep/golang-backports && \
