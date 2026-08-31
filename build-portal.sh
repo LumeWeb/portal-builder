@@ -86,6 +86,21 @@ parse_yaml_replacements() {
     yq eval '.replacements[] | "--replace " + .old + "=" + .new' "$PLUGIN_MANIFEST" 2>/dev/null || true
 }
 
+# Function to parse excludes from YAML
+parse_yaml_excludes() {
+    if [ ! -f "$PLUGIN_MANIFEST" ]; then
+        return
+    fi
+
+    # Use yq to extract excludes
+    if ! command -v yq >/dev/null 2>&1; then
+        return
+    fi
+
+    # Parse excludes array and format as --exclude module@version
+    yq eval '.excludes[] | "--exclude " + .module + "@" + .version' "$PLUGIN_MANIFEST" 2>/dev/null || true
+}
+
 # Function to parse build tags from YAML
 parse_yaml_build_tags() {
     if [ ! -f "$PLUGIN_MANIFEST" ]; then
@@ -152,6 +167,20 @@ parse_env_replacements() {
     done
 }
 
+# Function to parse excludes from ENV var (comma separated, format: module@version)
+parse_env_excludes() {
+    if [ -z "$EXCLUDES" ]; then
+        return
+    fi
+
+    # Convert comma-separated to newline-separated
+    excludes=$(echo "$EXCLUDES" | tr ',' '\n')
+    
+    for exclude in $excludes; do
+        echo "--exclude $exclude"
+    done
+}
+
 # Helper function to run xportal with common environment variables
 run_xportal() {
     PORTAL_VERSION="$PORTAL_VERSION" \
@@ -174,6 +203,8 @@ build_portal() {
     plugin_args=""
     # Collect replacement args from both sources
     replacement_args=""
+    # Collect exclude args from both sources
+    exclude_args=""
     
     # Validate YAML manifest if it exists
     if [ -f "$PLUGIN_MANIFEST" ]; then
@@ -190,6 +221,12 @@ build_portal() {
             replacement_args="$yaml_replacements"
             echo "Replacements from YAML:"
             echo "$yaml_replacements" | sed 's/--replace /  - /'
+        fi
+        yaml_excludes=$(parse_yaml_excludes)
+        if [ -n "$yaml_excludes" ]; then
+            exclude_args="$yaml_excludes"
+            echo "Excludes from YAML:"
+            echo "$yaml_excludes" | sed 's/--exclude /  - /'
         fi
     fi
     
@@ -223,6 +260,21 @@ build_portal() {
         fi
     fi
 
+    # Parse EXCLUDES env var if set
+    if [ -n "$EXCLUDES" ]; then
+        echo "Loading excludes from EXCLUDES env var"
+        env_excludes=$(parse_env_excludes)
+        if [ -n "$env_excludes" ]; then
+            if [ -n "$exclude_args" ]; then
+                exclude_args="$exclude_args $env_excludes"
+            else
+                exclude_args="$env_excludes"
+            fi
+            echo "Excludes from ENV:"
+            echo "$env_excludes" | sed 's/--exclude /  - /'
+        fi
+    fi
+
     # Parse build tags from YAML and forward them to the go build via
     # XPORTAL_GO_BUILD_FLAGS_EXTRA, which preserves the default nobadger/trimpath flags.
     if [ -f "$PLUGIN_MANIFEST" ]; then
@@ -236,9 +288,9 @@ build_portal() {
     # Run xportal with common environment variables
     # shellcheck disable=SC2086
     if [ "$OUTPUT_DIR" != "." ]; then
-        run_xportal --output "$OUTPUT_DIR/portal" $plugin_args $replacement_args
+        run_xportal --output "$OUTPUT_DIR/portal" $plugin_args $replacement_args $exclude_args
     else
-        run_xportal $plugin_args $replacement_args
+        run_xportal $plugin_args $replacement_args $exclude_args
     fi
     
     echo "Build complete: $OUTPUT_DIR/portal"

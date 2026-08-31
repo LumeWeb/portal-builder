@@ -246,6 +246,37 @@ test_valid_manifest "empty buildTags array" '{
   "buildTags": []
 }'
 
+# Test excludes
+test_valid_manifest "single exclude" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "excludes": [
+    {"module": "github.com/foo/bar", "version": "v1.2.0"}
+  ]
+}'
+
+test_valid_manifest "multiple excludes" '{
+  "portalVersion": "develop",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "excludes": [
+    {"module": "github.com/foo/bar", "version": "v1.2.0"},
+    {"module": "go.lumeweb.com/baz/qux", "version": "v2.0.0-beta.1"},
+    {"module": "github.com/abc/def", "version": "a1b2c3d"}
+  ]
+}'
+
+test_valid_manifest "empty excludes array" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "excludes": []
+}'
+
 echo ""
 echo "--- Invalid Manifests ---"
 
@@ -352,6 +383,65 @@ test_invalid_manifest "buildTags not an array" '{
     {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
   ],
   "buildTags": "foo"
+}'
+
+# Test invalid excludes
+test_invalid_manifest "exclude missing version" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "excludes": [
+    {"module": "github.com/foo/bar"}
+  ]
+}'
+
+test_invalid_manifest "exclude missing module" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "excludes": [
+    {"version": "v1.2.0"}
+  ]
+}'
+
+test_invalid_manifest "exclude extra property" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "excludes": [
+    {"module": "github.com/foo/bar", "version": "v1.2.0", "extra": "x"}
+  ]
+}'
+
+test_invalid_manifest "exclude module with space" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "excludes": [
+    {"module": "github.com/foo bar", "version": "v1.2.0"}
+  ]
+}'
+
+test_invalid_manifest "exclude invalid version" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "excludes": [
+    {"module": "github.com/foo/bar", "version": "not-a-version"}
+  ]
+}'
+
+test_invalid_manifest "excludes not an array" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "excludes": "github.com/foo/bar@v1.2.0"
 }'
 
 echo ""
