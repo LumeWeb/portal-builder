@@ -265,7 +265,7 @@ test_valid_manifest "multiple excludes" '{
   "excludes": [
     {"module": "github.com/foo/bar", "version": "v1.2.0"},
     {"module": "go.lumeweb.com/baz/qux", "version": "v2.0.0-beta.1"},
-    {"module": "github.com/abc/def", "version": "a1b2c3d"}
+    {"module": "github.com/abc/def", "version": "1.2.3"}
   ]
 }'
 
@@ -442,6 +442,26 @@ test_invalid_manifest "excludes not an array" '{
     {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
   ],
   "excludes": "github.com/foo/bar@v1.2.0"
+}'
+
+test_invalid_manifest "exclude git hash version" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "excludes": [
+    {"module": "github.com/foo/bar", "version": "a1b2c3d"}
+  ]
+}'
+
+test_invalid_manifest "exclude non-semver version" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "excludes": [
+    {"module": "github.com/foo/bar", "version": "latest"}
+  ]
 }'
 
 echo ""

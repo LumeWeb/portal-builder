@@ -85,12 +85,12 @@
           },
           "version": {
             "type": "string",
-            "description": "The specific version of the module to exclude (semantic version or git hash)",
-            "pattern": "^(v?[0-9]+\\.[0-9]+\\.[0-9]+(-[a-zA-Z0-9.]+)?|[0-9a-f]{7,40})$",
+            "description": "The semantic version of the module to exclude (must be a canonical semver; `go mod edit -exclude` rejects raw git hashes)",
+            "pattern": "^v?[0-9]+\\.[0-9]+\\.[0-9]+(-[a-zA-Z0-9.]+)?$",
             "examples": [
               "v1.0.0",
               "1.2.3",
-              "a1b2c3d"
+              "v2.0.0-beta.1"
             ]
           }
         }
