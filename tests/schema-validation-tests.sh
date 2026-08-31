@@ -221,6 +221,31 @@ test_valid_manifest "multiple plugins with git hashes" '{
   ]
 }'
 
+# Test build tags
+test_valid_manifest "single build tag" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "buildTags": ["foobar"]
+}'
+
+test_valid_manifest "multiple build tags" '{
+  "portalVersion": "develop",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "buildTags": ["foo", "bar", "feature_x"]
+}'
+
+test_valid_manifest "empty buildTags array" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "buildTags": []
+}'
+
 echo ""
 echo "--- Invalid Manifests ---"
 
@@ -302,6 +327,31 @@ test_invalid_manifest "invalid module name with space" '{
   "plugins": [
     {"module": "go.lumeweb.com/portal plugin", "version": "latest"}
   ]
+}'
+
+# Test invalid build tags
+test_invalid_manifest "build tag with space" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "buildTags": ["bad tag"]
+}'
+
+test_invalid_manifest "build tag not a string" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "buildTags": [123]
+}'
+
+test_invalid_manifest "buildTags not an array" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "buildTags": "foo"
 }'
 
 echo ""

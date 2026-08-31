@@ -55,6 +55,18 @@
         }
       }
     },
+    "buildTags": {
+      "type": "array",
+      "description": "Go build tags to apply when compiling the portal binary (passed to `go build -tags`). The default `nobadger` tag is always applied automatically on top of these.",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-zA-Z0-9_.-]+$",
+        "examples": [
+          "foo",
+          "bar"
+        ]
+      }
+    },
     "setup": {
       "type": "string",
       "description": "Inline bash script to run inside the build container before generate/build/test. Use for installing extra dependencies (e.g. Kubo, jq, system packages).",

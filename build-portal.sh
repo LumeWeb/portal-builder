@@ -86,6 +86,21 @@ parse_yaml_replacements() {
     yq eval '.replacements[] | "--replace " + .old + "=" + .new' "$PLUGIN_MANIFEST" 2>/dev/null || true
 }
 
+# Function to parse build tags from YAML
+parse_yaml_build_tags() {
+    if [ ! -f "$PLUGIN_MANIFEST" ]; then
+        return
+    fi
+
+    # Use yq to extract buildTags
+    if ! command -v yq >/dev/null 2>&1; then
+        return
+    fi
+
+    # Join build tags into a space-separated list
+    yq eval '.buildTags // [] | join(" ")' "$PLUGIN_MANIFEST" 2>/dev/null || true
+}
+
 # Function to run setup script from YAML manifest
 run_setup() {
     if [ ! -f "$PLUGIN_MANIFEST" ]; then
@@ -139,7 +154,9 @@ parse_env_replacements() {
 
 # Helper function to run xportal with common environment variables
 run_xportal() {
-    PORTAL_VERSION="$PORTAL_VERSION" xportal build "$@"
+    PORTAL_VERSION="$PORTAL_VERSION" \
+    XPORTAL_GO_BUILD_FLAGS_EXTRA="$XPORTAL_GO_BUILD_FLAGS_EXTRA" \
+    xportal build "$@"
 }
 
 # Main build function
@@ -203,6 +220,16 @@ build_portal() {
             fi
             echo "Replacements from ENV:"
             echo "$env_replacements" | sed 's/--replace /  - /'
+        fi
+    fi
+
+    # Parse build tags from YAML and forward them to the go build via
+    # XPORTAL_GO_BUILD_FLAGS_EXTRA, which preserves the default nobadger/trimpath flags.
+    if [ -f "$PLUGIN_MANIFEST" ]; then
+        build_tags=$(parse_yaml_build_tags)
+        if [ -n "$build_tags" ]; then
+            echo "Build tags: $build_tags"
+            XPORTAL_GO_BUILD_FLAGS_EXTRA="-tags \"$build_tags\""
         fi
     fi
     
