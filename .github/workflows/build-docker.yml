@@ -77,5 +77,5 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: ${{ github.event.inputs.force-fresh == 'true' && '' || 'type=gha' }}
-          cache-to: ${{ github.event.inputs.force-fresh == 'true' && '' || 'type=gha,mode=max' }}
+          cache-from: ${{ github.event.inputs.force-fresh != 'true' && 'type=gha' || '' }}
+          cache-to: ${{ github.event.inputs.force-fresh != 'true' && 'type=gha,mode=max' || '' }}
