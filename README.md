@@ -198,6 +198,22 @@ COPY --from=builder /dist/portal /usr/local/bin/portal
 CMD ["portal"]
 ```
 
+### Build with Go Build Tags
+
+When the portal code or a plugin should be compiled with custom [Go build tags](https://pkg.go.dev/cmd/go#hdr-Build_constraints), add `buildTags` to the manifest:
+
+```yaml
+portalVersion: develop
+plugins:
+  - module: go.lumeweb.com/portal-plugin-dashboard
+    version: latest
+buildTags:
+  - foo
+  - bar
+```
+
+The tags are forwarded to `go build -tags "foo bar"` via xportal's `XPORTAL_GO_BUILD_FLAGS_EXTRA`. The default `nobadger` tag (plus `-trimpath` and `-w -s` stripping) is always applied on top, so specifying `buildTags` does not disable those defaults.
+
 ## Configuration
 
 ### Method 1: YAML Manifest (Recommended)
@@ -283,6 +299,7 @@ The manifest is validated against the built-in schema. The schema enforces:
 - `version`: Semantic version, `latest`, `develop`, or git hash (e.g., `v1.0.0`, `1.2.3`, `latest`, `v2.0.0-beta.1`, `a1b2c3d`, `a1b2c3d4e5f6789012345678901234567890abcd`)
 - `portalVersion`: Portal core version (optional, supports `latest`, `develop`, semantic versions, or git hashes)
 - `replacements`: Go module replacements (optional, each with `old` and `new` fields for `go.mod` replace directives)
+- `buildTags`: Go build tags (optional, array of strings, applied to `go build -tags` alongside the default `nobadger`)`
 
 ### Custom Schema
 
