@@ -2,7 +2,7 @@
 # Build environment for compiling LumeWeb Portal with custom plugins via docker buildx
 # Use as a base image in your Dockerfile: FROM ghcr.io/lumeweb/portal-builder:latest
 
-FROM golang:1.27-alpine
+FROM golang:1.27-alpine3.23
 
 # Build arguments for yq version and checksum - override with --build-arg
 ARG YQ_VERSION=v4.52.2
@@ -28,7 +28,12 @@ RUN apk add --no-cache \
 # ^22.18.0 || ^24.11.0 || >=26.0.0 engine requirement. nodejs-current is avoided
 # because the npm distro package hard-depends on nodejs and nodejs-current
 # bundles no npm (only corepack).
-RUN apk add --no-cache nodejs npm
+# Pinned so a base-image drift to a lower Node version fails loudly here.
+RUN apk add --no-cache nodejs=24.18.1-r0 npm
+
+# Fail fast if a future base-image change drops Node outside the range
+# tsdown accepts; without this, the drift surfaces as a pnpm build error.
+RUN node -e "const [M,m]=process.versions.node.split('.').slice(0,2).map(Number);const ok=(M===22&&m>=18)||(M===24&&m>=11)||M>=26;if(!ok){console.error('Node '+process.version+' outside tsdown engine range');process.exit(1)}"
 
 # Install pnpm for frontend asset builds
 RUN npm install -g pnpm@10
