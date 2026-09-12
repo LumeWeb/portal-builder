@@ -9,6 +9,9 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 # Build arguments for yq version - override with --build-arg
 ARG YQ_VERSION=v4.52.2
+# Node.js major version from the NodeSource backport repository.
+# Ubuntu 24.04's distro nodejs is too old for tsdown (requires ^22.18.0 || >=24.11.0).
+ARG NODE_MAJOR=24
 
 # Install build dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -26,9 +29,14 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     software-properties-common \
     jq \
-    nodejs \
-    npm \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js from the NodeSource apt repository (package-managed, not a tarball)
+RUN curl -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x -o /tmp/nodesource_setup.sh && \
+    bash /tmp/nodesource_setup.sh && \
+    apt-get install -y --no-install-recommends nodejs && \
+    rm -f /tmp/nodesource_setup.sh && \
+    rm -rf /var/lib/apt/lists/*
 
 # Install pnpm for frontend asset builds
 RUN npm install -g pnpm@10

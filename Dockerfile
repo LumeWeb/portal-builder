@@ -22,9 +22,13 @@ RUN apk add --no-cache \
     curl \
     wget \
     unzip \
-    bash \
-    nodejs \
-    npm
+    bash
+
+# Alpine 3.23's distro nodejs is 24.18.1, which satisfies tsdown's
+# ^22.18.0 || ^24.11.0 || >=26.0.0 engine requirement. nodejs-current is avoided
+# because the npm distro package hard-depends on nodejs and nodejs-current
+# bundles no npm (only corepack).
+RUN apk add --no-cache nodejs npm
 
 # Install pnpm for frontend asset builds
 RUN npm install -g pnpm@10
