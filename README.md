@@ -230,6 +230,24 @@ excludes:
 
 The entries are forwarded to xportal's `--exclude module@version` flag, which adds `exclude` directives to `go.mod`. This is useful for working around dependency resolution conflicts where a bad module version would otherwise be pulled in.
 
+### Configure the Go Module Proxy and Checksum Database
+
+To control how the Go toolchain fetches modules during the build, add `goproxy` and/or `gosumdb` to the manifest. Each maps directly to the corresponding Go environment variable (`GOPROXY` and `GOSUMDB`) applied to the build:
+
+```yaml
+portalVersion: develop
+plugins:
+  - module: go.lumeweb.com/portal-plugin-dashboard
+    version: latest
+goproxy: https://proxy.go.lumeweb.com,direct
+gosumdb: off
+```
+
+- `goproxy`: sets `GOPROXY` (e.g. `https://proxy.go.lumeweb.com,direct`, `direct`, or `off`)
+- `gosumdb`: sets `GOSUMDB` (e.g. `off` to skip checksum-database verification, useful when `sum.golang.org` is unreachable or flaky)
+
+Both fields are optional. Values exported directly in the container environment (e.g. `docker run -e GOPROXY=direct ...`) take precedence over the manifest. If neither is set, the Go toolchain defaults apply.
+
 ## Configuration
 
 ### Method 1: YAML Manifest (Recommended)
@@ -295,6 +313,7 @@ Both sources can be used together - plugins from both will be combined.
 | `PLUGIN_MANIFEST` | Path to YAML plugin manifest | `portal-plugins.yaml` |
 | `OUTPUT_DIR` | Output directory for compiled binary | `/dist` |
 | `SCHEMA_PATH` | Path to JSON schema for validation | `/usr/local/share/portal-builder/schema.json` |
+| `GOPROXY` / `GOSUMDB` | Passed through to the Go toolchain; overrides the manifest `goproxy` / `gosumdb` fields | - |
 
 ## Schema Reference
 
@@ -317,6 +336,8 @@ The manifest is validated against the built-in schema. The schema enforces:
 - `replacements`: Go module replacements (optional, each with `old` and `new` fields for `go.mod` replace directives)
 - `buildTags`: Go build tags (optional, array of strings, applied to `go build -tags` alongside the default `nobadger`)
 - `excludes`: Go module exclusion directives (optional, each with `module` and `version` fields for `go.mod` exclude directives)
+- `goproxy`: Value for the `GOPROXY` environment variable (optional; e.g. `https://proxy.go.lumeweb.com,direct`, `direct`, or `off`)
+- `gosumdb`: Value for the `GOSUMDB` environment variable (optional; e.g. `off`)
 
 ### Custom Schema
 

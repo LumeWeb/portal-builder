@@ -116,6 +116,32 @@ parse_yaml_build_tags() {
     yq eval '.buildTags // [] | join(" ")' "$PLUGIN_MANIFEST" 2>/dev/null || true
 }
 
+# Function to parse goproxy from YAML
+parse_yaml_goproxy() {
+    if [ ! -f "$PLUGIN_MANIFEST" ]; then
+        return
+    fi
+
+    if ! command -v yq >/dev/null 2>&1; then
+        return
+    fi
+
+    yq eval '.goproxy // ""' "$PLUGIN_MANIFEST" 2>/dev/null || true
+}
+
+# Function to parse gosumdb from YAML
+parse_yaml_gosumdb() {
+    if [ ! -f "$PLUGIN_MANIFEST" ]; then
+        return
+    fi
+
+    if ! command -v yq >/dev/null 2>&1; then
+        return
+    fi
+
+    yq eval '.gosumdb // ""' "$PLUGIN_MANIFEST" 2>/dev/null || true
+}
+
 # Function to run setup script from YAML manifest
 run_setup() {
     if [ ! -f "$PLUGIN_MANIFEST" ]; then
@@ -282,6 +308,26 @@ build_portal() {
         if [ -n "$build_tags" ]; then
             echo "Build tags: $build_tags"
             XPORTAL_GO_BUILD_FLAGS_EXTRA="-tags \"$build_tags\""
+        fi
+
+        # Forward manifest goproxy/gosumdb to the go toolchain by exporting
+        # directly; variables are never re-tokenized, so values containing
+        # spaces or shell metacharacters pass through intact. Values set
+        # directly in the container environment are already inherited as-is,
+        # so they take precedence and need no forwarding.
+        if [ -z "${GOPROXY+x}" ]; then
+            yaml_goproxy=$(parse_yaml_goproxy)
+            if [ -n "$yaml_goproxy" ]; then
+                echo "Go proxy (from manifest): $yaml_goproxy"
+                export GOPROXY="$yaml_goproxy"
+            fi
+        fi
+        if [ -z "${GOSUMDB+x}" ]; then
+            yaml_gosumdb=$(parse_yaml_gosumdb)
+            if [ -n "$yaml_gosumdb" ]; then
+                echo "Go checksum database (from manifest): $yaml_gosumdb"
+                export GOSUMDB="$yaml_gosumdb"
+            fi
         fi
     fi
     

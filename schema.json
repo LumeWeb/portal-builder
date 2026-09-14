@@ -67,6 +67,24 @@
         ]
       }
     },
+    "goproxy": {
+      "type": "string",
+      "description": "Value for the GOPROXY environment variable used by the Go toolchain during the build (e.g. `https://proxy.golang.org,direct`, `https://proxy.go.lumeweb.com,direct`, `direct`, or `off`). Values set directly in the container environment take precedence over this field.",
+      "examples": [
+        "https://proxy.golang.org,direct",
+        "https://proxy.go.lumeweb.com,direct",
+        "direct",
+        "off"
+      ]
+    },
+    "gosumdb": {
+      "type": "string",
+      "description": "Value for the GOSUMDB environment variable used by the Go toolchain during the build. Use `off` to skip checksum-database verification (useful when the default sum.golang.org is unreachable or flaky). Values set directly in the container environment take precedence over this field.",
+      "examples": [
+        "sum.golang.org",
+        "off"
+      ]
+    },
     "excludes": {
       "type": "array",
       "description": "Go module exclusion directives (passed to `go mod edit -exclude`). Each excludes a specific module version from being selected, which can be used to work around dependency resolution conflicts.",

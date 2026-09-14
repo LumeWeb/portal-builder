@@ -277,6 +277,81 @@ test_valid_manifest "empty excludes array" '{
   "excludes": []
 }'
 
+# Test goproxy
+test_valid_manifest "goproxy with proxy list" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "goproxy": "https://proxy.go.lumeweb.com,direct"
+}'
+
+test_valid_manifest "goproxy direct" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "goproxy": "direct"
+}'
+
+test_valid_manifest "goproxy off" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "goproxy": "off"
+}'
+
+# Test gosumdb
+test_valid_manifest "gosumdb off" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "gosumdb": "off"
+}'
+
+test_valid_manifest "gosumdb with database name" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "gosumdb": "sum.golang.org"
+}'
+
+test_valid_manifest "goproxy and gosumdb combined" '{
+  "portalVersion": "develop",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "goproxy": "direct",
+  "gosumdb": "off"
+}'
+
+test_invalid_manifest "goproxy not a string" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "goproxy": 42
+}'
+
+test_invalid_manifest "gosumdb not a string" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "gosumdb": true
+}'
+
+test_invalid_manifest "goproxy wrong property name" '{
+  "portalVersion": "latest",
+  "plugins": [
+    {"module": "go.lumeweb.com/portal-plugin-core", "version": "latest"}
+  ],
+  "goProxy": "direct"
+}'
+
 echo ""
 echo "--- Invalid Manifests ---"
 
