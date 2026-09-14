@@ -331,12 +331,15 @@ build_portal() {
         fi
     fi
     
-    # Run xportal with common environment variables
+    # Run xportal with common environment variables. The retry loop invokes
+    # build_portal inside an if-test, which disables errexit for the whole
+    # call, so an xportal failure must be propagated explicitly or the loop
+    # never sees it and the build reports success with no binary.
     # shellcheck disable=SC2086
     if [ "$OUTPUT_DIR" != "." ]; then
-        run_xportal --output "$OUTPUT_DIR/portal" $plugin_args $replacement_args $exclude_args
+        run_xportal --output "$OUTPUT_DIR/portal" $plugin_args $replacement_args $exclude_args || return 1
     else
-        run_xportal $plugin_args $replacement_args $exclude_args
+        run_xportal $plugin_args $replacement_args $exclude_args || return 1
     fi
     
     echo "Build complete: $OUTPUT_DIR/portal"
@@ -348,7 +351,8 @@ mkdir -p "$OUTPUT_DIR"
 # Run setup from manifest (if present)
 run_setup
 
-# Retry only on transient sum.golang.org 500 errors with backoff aligned to propagation delay
+# Retry only on transient module download errors (sum.golang.org 500s, proxy
+# HTTP/2 stream errors) with backoff aligned to propagation delay
 log=$(mktemp)
 trap 'rm -f "$log"' EXIT
 for i in 1 2 3 4 5; do
@@ -359,14 +363,26 @@ for i in 1 2 3 4 5; do
         cat "$log"
         break
     fi
-    if grep -qiE 'sum\.golang\.org/.*: 500 Internal Server Error|checksum database.*internal server error' "$log" >/dev/null 2>&1; then
+    if grep -qiE 'sum\.golang\.org/.*: 500 Internal Server Error|checksum database.*internal server error|proxy\.golang\.org.*stream error|stream error:.*INTERNAL_ERROR' "$log" >/dev/null 2>&1; then
         if [ "$i" = "5" ]; then
             cat "$log"
             echo "All build attempts failed"
             exit 1
         fi
+        if grep -qiE 'proxy\.golang\.org.*stream error|stream error:.*INTERNAL_ERROR' "$log" >/dev/null 2>&1; then
+            # proxy.golang.org occasionally resets long-running HTTP/2 module
+            # download streams; downgrade retries to HTTP/1.1. Appended, so an
+            # externally provided GODEBUG is preserved.
+            case "${GODEBUG:-}" in
+                *http2client=0*) ;;
+                *)
+                    export GODEBUG="${GODEBUG:+$GODEBUG,}http2client=0"
+                    echo "Disabling HTTP/2 for module downloads on retries"
+                    ;;
+            esac
+        fi
         wait=$((120 * i))
-        echo "Transient sum.golang.org error on attempt $i, retrying in ${wait}s..."
+        echo "Transient module download error on attempt $i, retrying in ${wait}s..."
         sleep "$wait"
     else
         cat "$log"
