@@ -10,10 +10,6 @@ OUTPUT_DIR="${OUTPUT_DIR:-/dist}"
 PORTAL_VERSION="${PORTAL_VERSION:-latest}"
 SCHEMA_PATH="${SCHEMA_PATH:-/usr/local/share/portal-builder/schema.json}"
 
-# Extra VAR=value assignments forwarded to xportal (e.g. GOPROXY/GOSUMDB
-# from the manifest). Empty by default; filled by build_portal().
-GO_ENV_ARGS=""
-
 # Function to validate YAML against schema
 validate_yaml() {
     if [ ! -f "$PLUGIN_MANIFEST" ]; then
@@ -211,16 +207,10 @@ parse_env_excludes() {
     done
 }
 
-# Helper function to run xportal with common environment variables.
-# $GO_ENV_ARGS holds optional extra VAR=value pairs (e.g. GOPROXY/GOSUMDB from
-# the manifest), forwarded through env(1) because words produced by variable
-# expansion are not treated as shell assignments.
-# shellcheck disable=SC2086
+# Helper function to run xportal with common environment variables
 run_xportal() {
-    env \
     PORTAL_VERSION="$PORTAL_VERSION" \
     XPORTAL_GO_BUILD_FLAGS_EXTRA="$XPORTAL_GO_BUILD_FLAGS_EXTRA" \
-    $GO_ENV_ARGS \
     xportal build "$@"
 }
 
@@ -320,22 +310,23 @@ build_portal() {
             XPORTAL_GO_BUILD_FLAGS_EXTRA="-tags \"$build_tags\""
         fi
 
-        # Forward manifest goproxy/gosumdb to the go toolchain via the
-        # environment inherited by xportal's go subprocesses. Values set
+        # Forward manifest goproxy/gosumdb to the go toolchain by exporting
+        # directly; variables are never re-tokenized, so values containing
+        # spaces or shell metacharacters pass through intact. Values set
         # directly in the container environment are already inherited as-is,
         # so they take precedence and need no forwarding.
         if [ -z "${GOPROXY+x}" ]; then
             yaml_goproxy=$(parse_yaml_goproxy)
             if [ -n "$yaml_goproxy" ]; then
                 echo "Go proxy (from manifest): $yaml_goproxy"
-                GO_ENV_ARGS="$GO_ENV_ARGS GOPROXY=$yaml_goproxy"
+                export GOPROXY="$yaml_goproxy"
             fi
         fi
         if [ -z "${GOSUMDB+x}" ]; then
             yaml_gosumdb=$(parse_yaml_gosumdb)
             if [ -n "$yaml_gosumdb" ]; then
                 echo "Go checksum database (from manifest): $yaml_gosumdb"
-                GO_ENV_ARGS="$GO_ENV_ARGS GOSUMDB=$yaml_gosumdb"
+                export GOSUMDB="$yaml_gosumdb"
             fi
         fi
     fi
